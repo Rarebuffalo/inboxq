@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: inboxq-app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=sqlite:////app/data/tickets.db
+      - ENV=production
+    volumes:
+      - inboxq-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  inboxq-data:
+    driver: local
