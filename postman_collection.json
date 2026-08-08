@@ -1,0 +1,228 @@
+{
+	"info": {
+		"_postman_id": "b9687e8d-8a21-4f81-ba2c-297cd9a405fb",
+		"name": "InboxIQ API Platform",
+		"description": "Production-ready Postman collection mapping out the FastAPI endpoints, override payloads, CSV exports, analytics aggregates, and system health checks.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/health",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"health"
+					]
+				},
+				"description": "Reports liveness, SQLite connection state, Gemini configuration, heuristics state, and active P0/P1 warning counts."
+			},
+			"response": []
+		},
+		{
+			"name": "Classify & Ingest Email",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"email_id\": \"resident.alert@gmail.com\",\n  \"title\": \"Fingerprint scanner fails on right thumb\",\n  \"body\": \"I am standing at the society vault kiosk and the biometric reader keeps returning error scans for my register thumb. I need my tray to lock. Urgent support requested.\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/tickets/classify",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"tickets",
+						"classify"
+					]
+				},
+				"description": "Submits a support email payload to the classification engine. Performs duplicate SHA-256 hash checks, routes queues, and sets SLA deadlines."
+			},
+			"response": []
+		},
+		{
+			"name": "List Tickets Queue",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/v1/tickets?search=fingerprint&category=access_issue&priority=P0&sort_by=created_at&sort_order=desc",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"tickets"
+					],
+					"query": [
+						{
+							"key": "search",
+							"value": "fingerprint"
+						},
+						{
+							"key": "category",
+							"value": "access_issue"
+						},
+						{
+							"key": "priority",
+							"value": "P0"
+						},
+						{
+							"key": "sort_by",
+							"value": "created_at"
+						},
+						{
+							"key": "sort_order",
+							"value": "desc"
+						}
+					]
+				},
+				"description": "Lists support tickets queue matching criteria, status, priority, sorting patterns, and pagination offsets."
+			},
+			"response": []
+		},
+		{
+			"name": "Get Ticket Detail",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/v1/tickets/1",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"tickets",
+						"1"
+					]
+				},
+				"description": "Retrieves detail parameters for a single ticket, including explainable AI logs and the full timeline transition log list."
+			},
+			"response": []
+		},
+		{
+			"name": "Manual Override Action",
+			"request": {
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"category\": \"security_emergency\",\n  \"priority\": \"P0\",\n  \"status\": \"investigating\",\n  \"assigned_to\": \"agent_smith\",\n  \"draft_reply\": \"Manual confirmation of security check. Responder dispatched.\"\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/api/v1/tickets/1",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"tickets",
+						"1"
+					]
+				},
+				"description": "Applies operational adjustments (overrides category, priority, assignee, status, draft replies) and records modifications to the ticket timeline logs."
+			},
+			"response": []
+		},
+		{
+			"name": "Operational Analytics Stats",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/v1/analytics/stats",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"analytics",
+						"stats"
+					]
+				},
+				"description": "Fetches active ticket counts grouped by categories, priorities, open states, and average confidence levels."
+			},
+			"response": []
+		},
+		{
+			"name": "CSV Export Queue",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/api/v1/tickets/export?category=access_issue",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"tickets",
+						"export"
+					],
+					"query": [
+						{
+							"key": "category",
+							"value": "access_issue"
+						}
+					]
+				},
+				"description": "Downloads the support queue filtered items as a formatted CSV spreadsheet."
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		}
+	]
+}
