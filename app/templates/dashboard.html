@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InboxIQ - Ops Control Center</title>
+    <!-- Color scheme preference metadata for dark-mode rendering -->
+    <meta name="color-scheme" content="light dark">
+    <script>
+        // Inline theme initialization to prevent Flash of Unstyled Content (FOUC)
+        {
+            const theme = localStorage.getItem("color-scheme") || "dark";
+            document.documentElement.setAttribute("data-theme", theme);
+        }
+    </script>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <!-- Chart.js CDN for live dashboard analytics rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header class="app-header">
+        <div class="logo-container">
+            <span class="logo-icon">IQ</span>
+            <span class="logo-text">Inbox<span class="logo-accent">IQ</span></span>
+            <span class="badge env-badge">{{ env }}</span>
+        </div>
+        
+        <!-- Live P0/P1 Warning banner container -->
+        <div id="escalation-alert-banner" class="alert-banner hidden">
+            <span class="alert-pulse"></span>
+            <span class="alert-banner-text">CRITICAL LOCKER ACCESS / SAFETY ALERT ACTIVE</span>
+        </div>
+        
+        <nav class="header-nav">
+            <button id="theme-toggle" class="btn btn-icon" aria-label="Toggle Theme">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            </button>
+        </nav>
+    </header>
+
+    <main class="dashboard-container">
+        <!-- Analytics Status Grid -->
+        <section class="analytics-grid" aria-label="Overview Metrics">
+            <div class="stat-card" id="card-total">
+                <h3>Total Ingested</h3>
+                <p class="stat-value" id="val-total">-</p>
+            </div>
+            <div class="stat-card alert-p0" id="card-p0">
+                <h3>Critical (P0)</h3>
+                <p class="stat-value" id="val-p0">-</p>
+            </div>
+            <div class="stat-card alert-p1" id="card-p1">
+                <h3>High Urgency (P1)</h3>
+                <p class="stat-value" id="val-p1">-</p>
+            </div>
+            <div class="stat-card" id="card-open">
+                <h3>Open Tickets</h3>
+                <p class="stat-value" id="val-open">-</p>
+            </div>
+            <div class="stat-card" id="card-investigating">
+                <h3>Investigating</h3>
+                <p class="stat-value" id="val-investigating">-</p>
+            </div>
+            <div class="stat-card" id="card-resolved">
+                <h3>Resolved</h3>
+                <p class="stat-value" id="val-resolved">-</p>
+            </div>
+            <div class="stat-card" id="card-today">
+                <h3>Today's Tickets</h3>
+                <p class="stat-value" id="val-today">-</p>
+            </div>
+            <div class="stat-card" id="card-confidence">
+                <h3>Avg Confidence</h3>
+                <p class="stat-value" id="val-confidence">-</p>
+            </div>
+        </section>
+
+        <!-- Charts Segment -->
+        <section class="charts-section">
+            <div class="chart-container">
+                <span class="chart-title">Priority Split</span>
+                <canvas id="chart-priority"></canvas>
+            </div>
+            <div class="chart-container">
+                <span class="chart-title">Category Split</span>
+                <canvas id="chart-category"></canvas>
+            </div>
+            <div class="chart-container">
+                <span class="chart-title">Status Split</span>
+                <canvas id="chart-status"></canvas>
+            </div>
+            <div class="chart-container">
+                <span class="chart-title">Recent Activity</span>
+                <canvas id="chart-activity"></canvas>
+            </div>
+        </section>
+
+        <!-- Main Work Area -->
+        <div class="work-area">
+            <!-- Left Panel: Ticket Queue List -->
+            <section class="queue-panel" aria-label="Ticket Queue">
+                <div class="panel-header">
+                    <div class="flex-header">
+                        <h2>Live Support Queue</h2>
+                        <div style="display:flex; gap:0.5rem;">
+                            <button id="btn-export-csv" class="btn btn-secondary btn-sm">Export CSV</button>
+                            <button id="refresh-queue" class="btn btn-secondary btn-sm">Refresh</button>
+                        </div>
+                    </div>
+                    <div class="search-box">
+                        <input type="search" id="queue-search" placeholder="Search code, title, email, content..." aria-label="Search Tickets">
+                    </div>
+                    <div class="filter-controls-row">
+                        <select id="filter-priority" aria-label="Filter by Priority">
+                            <option value="">All Priorities</option>
+                            <option value="P0">P0 - Critical</option>
+                            <option value="P1">P1 - High</option>
+                            <option value="P2">P2 - Medium</option>
+                            <option value="P3">P3 - Low</option>
+                        </select>
+                        <select id="filter-category" aria-label="Filter by Category">
+                            <option value="">All Categories</option>
+                            <option value="security_emergency">Security / Emergency</option>
+                            <option value="access_issue">Access Issue</option>
+                            <option value="onboarding_kyc">Onboarding & KYC</option>
+                            <option value="billing_payment">Billing & Payment</option>
+                            <option value="locker_management">Locker Management</option>
+                            <option value="general_support">General Support</option>
+                        </select>
+                        <select id="filter-status" aria-label="Filter by Status">
+                            <option value="">All Statuses</option>
+                            <option value="open">Open</option>
+                            <option value="investigating">Investigating</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                    </div>
+                    <div class="sorting-controls">
+                        <label for="sort-by">Sort:</label>
+                        <select id="sort-by">
+                            <option value="created_at">Date Ingested</option>
+                            <option value="priority">Priority Severity</option>
+                            <option value="confidence">AI Confidence</option>
+                            <option value="status">Ticket Status</option>
+                        </select>
+                        <select id="sort-order">
+                            <option value="desc">Descending</option>
+                            <option value="asc">Ascending</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="ticket-list" id="ticket-list-container">
+                    <p class="empty-message">Loading support queue...</p>
+                </div>
+                <div class="pagination-footer">
+                    <button id="btn-prev" class="btn btn-secondary btn-xs" disabled>&lt; Prev</button>
+                    <span id="page-indicator">Page 1</span>
+                    <button id="btn-next" class="btn btn-secondary btn-xs">Next &gt;</button>
+                </div>
+            </section>
+
+            <!-- Right Panel: Ticket Detail Override Viewer -->
+            <section class="detail-panel" id="detail-panel-container" aria-label="Ticket Details">
+                <div class="empty-state">
+                    <p>Select a ticket from the queue to view details, logs, and draft replies.</p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Simulated Log Toast Popups -->
+    <div id="toast-container"></div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
